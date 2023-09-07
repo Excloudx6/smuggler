@@ -225,14 +225,28 @@ class Desyncr:
         return self._test(te_payload)
 
     def _create_exec_test(self, name, te_payload):
-        def pretty_print(name, dismsg):
+        # Pass url into pretty print
+        def pretty_print(
+            name,
+            dismsg,
+            method=None,
+            url=self._url,
+        ):
             spacing = 13
-            sys.stdout.write("\r" + " " * 100 + "\r")
+            # sys.stdout.write("\r" + " " * 10 + "\r")
+            # print("here232")
+            # Add URL to the msg
             msg = (
                 Style.BRIGHT
                 + Fore.MAGENTA
-                + "[%s]%s: %s"
-                % (Fore.CYAN + name + Fore.MAGENTA, " " * (spacing - len(name)), dismsg)
+                + "[%s]%s: %s | URL: %s | Method: %s"
+                % (
+                    Fore.CYAN + name + Fore.MAGENTA,
+                    " " * (spacing - len(name)),
+                    dismsg,
+                    self._url,
+                    method if method else self._method,
+                )
             )
             sys.stdout.write(CF(msg + Style.RESET_ALL))
             sys.stdout.flush()
@@ -269,14 +283,17 @@ class Desyncr:
             with open(fname, "wb") as file:
                 file.write(bytes(str(payload), "utf-8"))
 
+        # Print out name for inspection
+        # pretty_print(name, "Testing...")
+
         # First lets test TECL
-        pretty_print(name, "Checking TECL...")
+        # pretty_print(name, "Checking TECL...")
         start_time = time.time()
         tecl_res = self._check_tecl(te_payload, 0)
         tecl_time = time.time() - start_time
 
         # Next lets test CLTE
-        pretty_print(name, "Checking CLTE...")
+        # pretty_print(name, "Checking CLTE...")
         start_time = time.time()
         clte_res = self._check_clte(te_payload, 0)
         clte_time = time.time() - start_time
@@ -312,6 +329,8 @@ class Desyncr:
                         + self._configfile.split("/")[-1]
                         + "\n"
                     )
+                    # TRACE2
+                    # print("here319")
                     pretty_print(name, dismsg)
 
                     # Write payload out to file
@@ -326,6 +345,7 @@ class Desyncr:
                     + "CLTE TIMEOUT ON BOTH LENGTH 4 AND 11"
                     + ["\n", ""][self._quiet]
                 )
+                # print("here334")
                 pretty_print(name, dismsg)
 
         elif tecl_res[0] == 1:
@@ -361,6 +381,7 @@ class Desyncr:
                         + self._configfile.split("/")[-1]
                         + "\n"
                     )
+                    # print("here370")
                     pretty_print(name, dismsg)
 
                     # Write payload out to file
@@ -374,6 +395,7 @@ class Desyncr:
                     + "TECL TIMEOUT ON BOTH LENGTH 6 AND 5"
                     + ["\n", ""][self._quiet]
                 )
+                # print("here385")
                 pretty_print(name, dismsg)
 
         # elif ((tecl_res[0] == 1) and (clte_res[0] == 1)):
@@ -383,6 +405,7 @@ class Desyncr:
         elif (tecl_res[0] == -1) or (clte_res[0] == -1):
             # ERROR
             dismsg = Fore.YELLOW + "SOCKET ERROR" + ["\n", ""][self._quiet]
+            # print("here396")
             pretty_print(name, dismsg)
 
         elif (tecl_res[0] == 0) and (clte_res[0] == 0):
@@ -414,11 +437,16 @@ class Desyncr:
             ) % (clte_time, clte_res[1][9 : 9 + 3])
 
             dismsg = Fore.GREEN + "OK" + tecl_msg + clte_msg + ["\n", ""][self._quiet]
-            pretty_print(name, dismsg)
+            # TRACE1
+            # [nameprefix1]  : OK (TECL: 0.91 - 405) (CLTE: 0.69 - 405)
+            # print("here416")
+            # Pass url into pretty print
+            pretty_print(name, dismsg, self._method, url=self._url)
 
         elif (tecl_res[0] == 2) or (clte_res[0] == 2):
             # Disconnected
             dismsg = Fore.YELLOW + "DISCONNECTED" + ["\n", ""][self._quiet]
+            # print("here423")
             pretty_print(name, dismsg)
 
         self._attempts = 0
@@ -566,6 +594,7 @@ if __name__ == "__main__":
         method = server[1].upper()
         configfile = Args.configfile
 
+        # TODO: Print this information per line basis instead of per server basis
         print_info("URL        : %s" % (Fore.CYAN + server[0]), FileHandle)
         print_info("Method     : %s" % (Fore.CYAN + method), FileHandle)
         print_info("Endpoint   : %s" % (Fore.CYAN + endpoint), FileHandle)
